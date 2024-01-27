@@ -1,8 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "CarRacingSimulatorPawn.h"
-#include "CarRacingSimulatorWheelFront.h"
-#include "CarRacingSimulatorWheelRear.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -10,6 +8,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "ChaosWheeledVehicleMovementComponent.h"
+#include "Checkpoint.h"
 
 #define LOCTEXT_NAMESPACE "VehiclePawn"
 
@@ -51,7 +50,6 @@ ACarRacingSimulatorPawn::ACarRacingSimulatorPawn()
 
 	// get the Chaos Wheeled movement component
 	ChaosVehicleMovement = CastChecked<UChaosWheeledVehicleMovementComponent>(GetVehicleMovement());
-
 }
 
 void ACarRacingSimulatorPawn::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -61,34 +59,49 @@ void ACarRacingSimulatorPawn::SetupPlayerInputComponent(class UInputComponent* P
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		// steering 
-		EnhancedInputComponent->BindAction(SteeringAction, ETriggerEvent::Triggered, this, &ACarRacingSimulatorPawn::Steering);
-		EnhancedInputComponent->BindAction(SteeringAction, ETriggerEvent::Completed, this, &ACarRacingSimulatorPawn::Steering);
+		EnhancedInputComponent->BindAction(SteeringAction, ETriggerEvent::Triggered, this,
+		                                   &ACarRacingSimulatorPawn::Steering);
+		EnhancedInputComponent->BindAction(SteeringAction, ETriggerEvent::Completed, this,
+		                                   &ACarRacingSimulatorPawn::Steering);
 
 		// throttle 
-		EnhancedInputComponent->BindAction(ThrottleAction, ETriggerEvent::Triggered, this, &ACarRacingSimulatorPawn::Throttle);
-		EnhancedInputComponent->BindAction(ThrottleAction, ETriggerEvent::Completed, this, &ACarRacingSimulatorPawn::Throttle);
+		EnhancedInputComponent->BindAction(ThrottleAction, ETriggerEvent::Triggered, this,
+		                                   &ACarRacingSimulatorPawn::Throttle);
+		EnhancedInputComponent->BindAction(ThrottleAction, ETriggerEvent::Completed, this,
+		                                   &ACarRacingSimulatorPawn::Throttle);
 
 		// break 
-		EnhancedInputComponent->BindAction(BrakeAction, ETriggerEvent::Triggered, this, &ACarRacingSimulatorPawn::Brake);
-		EnhancedInputComponent->BindAction(BrakeAction, ETriggerEvent::Started, this, &ACarRacingSimulatorPawn::StartBrake);
-		EnhancedInputComponent->BindAction(BrakeAction, ETriggerEvent::Completed, this, &ACarRacingSimulatorPawn::StopBrake);
+		EnhancedInputComponent->BindAction(BrakeAction, ETriggerEvent::Triggered, this,
+		                                   &ACarRacingSimulatorPawn::Brake);
+		EnhancedInputComponent->BindAction(BrakeAction, ETriggerEvent::Started, this,
+		                                   &ACarRacingSimulatorPawn::StartBrake);
+		EnhancedInputComponent->BindAction(BrakeAction, ETriggerEvent::Completed, this,
+		                                   &ACarRacingSimulatorPawn::StopBrake);
 
 		// handbrake 
-		EnhancedInputComponent->BindAction(HandbrakeAction, ETriggerEvent::Started, this, &ACarRacingSimulatorPawn::StartHandbrake);
-		EnhancedInputComponent->BindAction(HandbrakeAction, ETriggerEvent::Completed, this, &ACarRacingSimulatorPawn::StopHandbrake);
+		EnhancedInputComponent->BindAction(HandbrakeAction, ETriggerEvent::Started, this,
+		                                   &ACarRacingSimulatorPawn::StartHandbrake);
+		EnhancedInputComponent->BindAction(HandbrakeAction, ETriggerEvent::Completed, this,
+		                                   &ACarRacingSimulatorPawn::StopHandbrake);
 
 		// look around 
-		EnhancedInputComponent->BindAction(LookAroundAction, ETriggerEvent::Triggered, this, &ACarRacingSimulatorPawn::LookAround);
+		EnhancedInputComponent->BindAction(LookAroundAction, ETriggerEvent::Triggered, this,
+		                                   &ACarRacingSimulatorPawn::LookAround);
 
 		// toggle camera 
-		EnhancedInputComponent->BindAction(ToggleCameraAction, ETriggerEvent::Triggered, this, &ACarRacingSimulatorPawn::ToggleCamera);
+		EnhancedInputComponent->BindAction(ToggleCameraAction, ETriggerEvent::Triggered, this,
+		                                   &ACarRacingSimulatorPawn::ToggleCamera);
 
 		// reset the vehicle 
-		EnhancedInputComponent->BindAction(ResetVehicleAction, ETriggerEvent::Triggered, this, &ACarRacingSimulatorPawn::ResetVehicle);
+		EnhancedInputComponent->BindAction(ResetVehicleAction, ETriggerEvent::Triggered, this,
+		                                   &ACarRacingSimulatorPawn::ResetVehicle);
 	}
 	else
 	{
-		UE_LOG(LogTemplateVehicle, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+		UE_LOG(LogTemplateVehicle, Error,
+		       TEXT(
+			       "'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."
+		       ), *GetNameSafe(this));
 	}
 }
 
@@ -187,6 +200,17 @@ void ACarRacingSimulatorPawn::ToggleCamera(const FInputActionValue& Value)
 
 void ACarRacingSimulatorPawn::ResetVehicle(const FInputActionValue& Value)
 {
+	ResetVehicleAtCurrentCheckpoint();
+}
+
+void ACarRacingSimulatorPawn::ResetVehicleAtCurrentCheckpoint()
+{
+	if (CurrentCheckpoint)
+	{
+		SetActorLocation(CurrentCheckpoint->GetActorLocation());
+		SetActorRotation(CurrentCheckpoint->GetActorRotation() + FRotator(0.0f, 180.0f, 0.0f));
+	}
+
 	// reset to a location slightly above our current one
 	FVector ResetLocation = GetActorLocation() + FVector(0.0f, 0.0f, 50.0f);
 
@@ -194,9 +218,10 @@ void ACarRacingSimulatorPawn::ResetVehicle(const FInputActionValue& Value)
 	FRotator ResetRotation = GetActorRotation();
 	ResetRotation.Pitch = 0.0f;
 	ResetRotation.Roll = 0.0f;
-	
+
 	// teleport the actor to the reset spot and reset physics
-	SetActorTransform(FTransform(ResetRotation, ResetLocation, FVector::OneVector), false, nullptr, ETeleportType::TeleportPhysics);
+	SetActorTransform(FTransform(ResetRotation, ResetLocation, FVector::OneVector), false, nullptr,
+	                  ETeleportType::TeleportPhysics);
 
 	GetMesh()->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
 	GetMesh()->SetPhysicsLinearVelocity(FVector::ZeroVector);
