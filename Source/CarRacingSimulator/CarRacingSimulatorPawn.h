@@ -136,4 +136,17 @@ public:
 	FORCEINLINE UCameraComponent* GetBackCamera() const { return BackCamera; }
 	/** Returns the cast Chaos Vehicle Movement subobject */
 	FORCEINLINE const TObjectPtr<UChaosWheeledVehicleMovementComponent>& GetChaosVehicleMovement() const { return ChaosVehicleMovement; }
+
+
+	
+
+	UPROPERTY(BlueprintReadWrite, Category = "Config")
+	int CurrentLap = 1;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Config")
+	class ACheckpoint* CurrentCheckpoint = nullptr;
+
+	/** Handles reset vehicle input */
+	UFUNCTION(BlueprintCallable, Category = "Crs")
+	void ResetVehicleAtCurrentCheckpoint();
 };
