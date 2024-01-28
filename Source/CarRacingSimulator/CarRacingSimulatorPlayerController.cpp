@@ -34,6 +34,8 @@ void ACarRacingSimulatorPlayerController::Tick(float Delta)
 	{
 		VehicleUI->UpdateSpeed(VehiclePawn->GetChaosVehicleMovement()->GetForwardSpeed());
 		VehicleUI->UpdateGear(VehiclePawn->GetChaosVehicleMovement()->GetCurrentGear());
+		VehicleUI->UpdateLaps(VehiclePawn->CurrentLap);
+		VehicleUI->UpdateBoost(VehiclePawn->Boost);
 	}
 }
 

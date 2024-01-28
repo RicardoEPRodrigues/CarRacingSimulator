@@ -17,3 +17,13 @@ void UCarRacingSimulatorUI::UpdateGear(int32 NewGear)
 	// call the Blueprint handler
 	OnGearUpdate(NewGear);
 }
+
+void UCarRacingSimulatorUI::UpdateLaps(int CurrentLap)
+{
+	OnLapUpdate(CurrentLap);
+}
+
+void UCarRacingSimulatorUI::UpdateBoost(float Boost)
+{
+	OnBoostUpdate(Boost);
+}
