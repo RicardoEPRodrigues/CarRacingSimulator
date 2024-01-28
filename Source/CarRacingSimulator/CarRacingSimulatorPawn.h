@@ -149,4 +149,7 @@ public:
 	/** Handles reset vehicle input */
 	UFUNCTION(BlueprintCallable, Category = "Crs")
 	void ResetVehicleAtCurrentCheckpoint();
+
+	UPROPERTY(BlueprintReadWrite, Category = "Config")
+	float Boost = 0.0f;
 };
