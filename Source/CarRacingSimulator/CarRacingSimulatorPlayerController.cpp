@@ -46,3 +46,11 @@ void ACarRacingSimulatorPlayerController::OnPossess(APawn* InPawn)
 	// get a pointer to the controlled pawn
 	VehiclePawn = CastChecked<ACarRacingSimulatorPawn>(InPawn);
 }
+
+void ACarRacingSimulatorPlayerController::SetUIVisibility(bool bIsVisible)
+{
+	if (IsValid(VehicleUI))
+	{
+		VehicleUI->SetVisibility(bIsVisible ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+	}
+}

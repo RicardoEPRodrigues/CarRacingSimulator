@@ -35,6 +35,9 @@ protected:
 	/** Pointer to the UI widget */
 	TObjectPtr<UCarRacingSimulatorUI> VehicleUI;
 
+	UFUNCTION(BlueprintCallable, Category = UI)
+	void SetUIVisibility(bool bIsVisible);
+
 	// Begin Actor interface
 protected:
 

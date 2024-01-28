@@ -17,6 +17,29 @@ void ALapRacingGameMode::StartRace()
 	{
 		Checkpoint->OnCarOverlap.AddDynamic(this, &ALapRacingGameMode::OnCarOverlap);
 	}
+
+	HasStarted = true;
+	StartTime = GetWorld()->TimeSeconds;
+}
+
+float ALapRacingGameMode::GetRaceTime() const
+{
+	if (!HasStarted)
+	{
+		return 0;
+	}
+	return GetWorld()->TimeSeconds - StartTime;
+}
+
+FString ALapRacingGameMode::GetRaceTimeString() const
+{
+	const float RaceTime = GetRaceTime();
+	const int Minutes = RaceTime / 60;
+	const int Seconds = (int)RaceTime % 60;
+	const int Milliseconds = (RaceTime - ((float)Minutes * 60.0f) - (float)Seconds) * 1000.0f;
+	FString MillisecondsString = FString::FromInt(Milliseconds);
+	MillisecondsString = MillisecondsString.Left(1);
+	return FString::Printf(TEXT("%02d:%02d.%s"), Minutes, Seconds, *MillisecondsString);
 }
 
 void ALapRacingGameMode::OnCarOverlap(ACheckpoint* Checkpoint, ACarRacingSimulatorPawn* Car)
@@ -62,7 +85,7 @@ void ALapRacingGameMode::OnCarOverlap(ACheckpoint* Checkpoint, ACarRacingSimulat
 		Car->CurrentLap++;
 		if (Car->CurrentLap >= Laps)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("WINNER WINNER CHICKEN DINNER for %s"), *Car->GetName());
+			OnRaceFinished.Broadcast();
 		}
 	}
 }
